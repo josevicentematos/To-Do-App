@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import "./App.css";
 import TaskForm from "./components/TaskForm";
 import Task from "./components/Task";
+import Login from "./components/Login";
 
 class App extends Component {
   constructor(props) {
@@ -9,6 +10,7 @@ class App extends Component {
 
     this.state = {
       tasks: [],
+      page: "HOME",
     };
   }
 
@@ -41,12 +43,12 @@ class App extends Component {
       }),
     })
       .then((response) => response.json())
-      .then((status) => {
-        if (status == "200") {
+      .then((response) => {
+        if (response !== "404") {
           this.setState({
             tasks: [
               ...this.state.tasks,
-              { title: title, description: description },
+              { title: title, description: description, id: response },
             ],
           });
         } else alert("Ha ocurrido un error al guardar la nueva tarea.");
@@ -62,36 +64,43 @@ class App extends Component {
       .then((response) => response.json())
       .then((status) => {
         if (status == "200") {
+          console.log("deleting");
           const newTasksState = [...this.state.tasks];
 
           newTasksState.map((task, index) => {
-            if (task.id == id) {
+            if (task.id === id) {
               newTasksState.splice(index, 1);
               this.setState({ tasks: newTasksState });
             }
           });
-        } else alert("Ha ocurrido un error al guardar la nueva tarea.");
+        } else alert("Ha ocurrido un error al eliminar la nueva tarea.");
       });
   };
 
   render() {
     return (
-      <div>
-        <TaskForm onSubmit={this.handleSubmit} />
-        <hr />
-        <div className="row m-2">
-          {this.state.tasks.map((task, index) => {
-            return (
-              <Task
-                task={task}
-                key={index}
-                id={task.id}
-                onDelete={this.handleDelete}
-              />
-            );
-          })}
-        </div>
-      </div>
+      <main>
+        {this.state.page === "LOGIN" ? (
+          <Login />
+        ) : (
+          <div>
+            <TaskForm onSubmit={this.handleSubmit} />
+            <hr />
+            <div className="row m-2">
+              {this.state.tasks.map((task, index) => {
+                return (
+                  <Task
+                    task={task}
+                    key={index}
+                    id={task.id}
+                    onDelete={this.handleDelete}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </main>
     );
   }
 }
