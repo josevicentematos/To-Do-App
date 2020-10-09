@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-class Login extends Component {
+class Register extends Component {
   state = {
     username: "",
     password: "",
@@ -12,7 +12,7 @@ class Login extends Component {
       event.target.username.value !== "" &&
       event.target.password.value !== ""
     ) {
-      this.props.onLogin(
+      this.props.onSubmitRegister(
         event.target.username.value,
         event.target.password.value
       );
@@ -53,15 +53,7 @@ class Login extends Component {
                 }
               />
             </div>
-            <button
-              onClick={(event) => this.props.onRegister()}
-              className="btn btn-dark"
-            >
-              Registrarse
-            </button>
-            <button type="submit" className="btn btn-dark">
-              Entrar
-            </button>
+            <button className="btn btn-dark">Registrarse</button>
           </form>
         </div>
       </div>
@@ -69,4 +61,4 @@ class Login extends Component {
   }
 }
 
-export default Login;
+export default Register;

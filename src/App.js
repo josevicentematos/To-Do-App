@@ -3,6 +3,7 @@ import "./App.css";
 import TaskForm from "./components/TaskForm";
 import Task from "./components/Task";
 import Login from "./components/Login";
+import Register from "./components/Register";
 
 class App extends Component {
   constructor(props) {
@@ -10,28 +11,71 @@ class App extends Component {
 
     this.state = {
       tasks: [],
-      page: "HOME",
+      page: "LOGIN",
     };
   }
 
   componentDidMount() {
-    fetch("/api/load")
+    fetch("/check")
       .then((response) => response.json())
-      .then((data) => {
-        data.map((task, index) => {
-          this.setState({
-            tasks: [
-              ...this.state.tasks,
-              {
-                id: task._id,
-                title: task.title,
-                description: task.description,
-              },
-            ],
+      .then((response) => {
+        if (response == true) this.setState({ page: "HOME" });
+      }),
+      fetch("/api/load")
+        .then((response) => response.json())
+        .then((data) => {
+          data.map((task, index) => {
+            this.setState({
+              tasks: [
+                ...this.state.tasks,
+                {
+                  id: task._id,
+                  title: task.title,
+                  description: task.description,
+                },
+              ],
+            });
           });
         });
-      });
   }
+
+  handleNewUser = (username, password) => {
+    fetch("/register", {
+      method: "POST",
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify({
+        username: username,
+        password: password,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data == "200") {
+          alert("Se ha registrado satisfactoriamente.");
+          this.setState({ page: "LOGIN" });
+        }
+      });
+  };
+
+  handleLogin = (username, password) => {
+    fetch("/login", {
+      method: "POST",
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify({
+        username: username,
+        password: password,
+      }),
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        if (response == "200") this.setState({ page: "HOME" });
+        else alert("Usuario o contraseña incorrecta.");
+      });
+  };
+
+  handleRegister = () => {
+    this.setState({ page: "REGISTER" });
+  };
 
   handleSubmit = (title, description) => {
     fetch("/api/save", {
@@ -44,6 +88,7 @@ class App extends Component {
     })
       .then((response) => response.json())
       .then((response) => {
+        console.log(response);
         if (response !== "404") {
           this.setState({
             tasks: [
@@ -64,7 +109,6 @@ class App extends Component {
       .then((response) => response.json())
       .then((status) => {
         if (status == "200") {
-          console.log("deleting");
           const newTasksState = [...this.state.tasks];
 
           newTasksState.map((task, index) => {
@@ -81,8 +125,8 @@ class App extends Component {
     return (
       <main>
         {this.state.page === "LOGIN" ? (
-          <Login />
-        ) : (
+          <Login onLogin={this.handleLogin} onRegister={this.handleRegister} />
+        ) : this.state.page === "HOME" ? (
           <div>
             <TaskForm onSubmit={this.handleSubmit} />
             <hr />
@@ -99,6 +143,8 @@ class App extends Component {
               })}
             </div>
           </div>
+        ) : (
+          <Register onSubmitRegister={this.handleNewUser} />
         )}
       </main>
     );
