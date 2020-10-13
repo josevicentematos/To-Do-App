@@ -19,6 +19,8 @@ var Schema = mongoose.Schema;
 var TaskSchema = new Schema({
   title: String,
   description: String,
+  date: Date,
+  user: String,
 });
 
 var UserSchema = new Schema({
@@ -77,6 +79,17 @@ app.get("/check", function (req, res) {
 });
 
 app.get("/api/load", function (req, res) {
+  // User.findOne({ _id: req.user }, (err, user) => {
+  //   if (err) return res.send("404");
+  //   if (!user) return res.send("404");
+  //   if (user) {
+  //     Task.find({ user: user.username }, function (err, tasks) {
+  //       if (err) return console.error(err);
+  //       res.send(JSON.stringify(tasks));
+  //     });
+  //   }
+  // });
+
   Task.find(function (err, tasks) {
     if (err) return console.error(err);
     res.send(JSON.stringify(tasks));
@@ -95,36 +108,56 @@ app.post(
   }
 );
 
-app.post("/register", function (req, res) {
-  const newUser = new User({
-    username: req.body.username,
-    password: req.body.password,
-  });
+app.get("/logout", function (req, res) {
+  console.log("Logging out");
+  req.logout();
+  res.send("200");
+});
 
-  newUser.save(function (err, newUser) {
+app.post("/register", function (req, res) {
+  User.findOne({ username: req.body.username }, (err, user) => {
     if (err) {
       console.error(err);
       return res.send("404");
-    } else res.send("200");
-  });
+    }
+    if (user) res.send("409");
+    if (!user) {
+      const newUser = new User({
+        username: req.body.username,
+        password: req.body.password,
+      });
 
-  // User.find((err, users) => {
-  //   if (err) console.error(err);
-  //   else console.log(users);
-  // });
+      newUser.save(function (err, newUser) {
+        if (err) {
+          console.error(err);
+          return res.send("404");
+        } else res.send("200");
+      });
+    }
+  });
 });
 
 app.post("/api/save", function (req, res) {
-  const newTask = new Task({
-    title: req.body.title,
-    description: req.body.description,
-  });
+  date = new Date();
 
-  newTask.save(function (err, newTask) {
-    if (err) {
-      console.error(err);
-      return res.send("404");
-    } else res.send(newTask._id);
+  User.findOne({ _id: req.user }, (err, user) => {
+    if (err) return res.send("404");
+    if (!user) return res.send("404");
+    if (user) {
+      const newTask = new Task({
+        title: req.body.title,
+        description: req.body.description,
+        user: user.username,
+        date: date,
+      });
+
+      newTask.save(function (err, newTask) {
+        if (err) {
+          console.error(err);
+          return res.send("404");
+        } else res.send(JSON.stringify({ code: "200", taskId: newTask._id, user: newTask.user, date: newTask.date }));
+      });
+    }
   });
 });
 
@@ -137,4 +170,4 @@ app.delete("/api/delete", function (req, res) {
   });
 });
 
-app.listen(3000, () => console.log("Port: 3000"));
+app.listen(4000, () => console.log("Port: 4000"));
